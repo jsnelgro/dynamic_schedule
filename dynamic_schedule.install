@@ -1,0 +1,44 @@
+<?php
+// $Id:
+/**
+ * Implementation of hook_install().
+ */
+function dynamic_schedule_install() {
+// install the content type
+  $filename = drupal_get_path('module','dynamic_schedule') . "/dynamic_schedule.install.inc";
+  $content = implode ('', file ($filename));
+  // Build form state
+  $form_state = array(
+    'values' => array(
+      'type_name' => '<create>',
+      'macro' => $content,
+      ),
+    );
+  drupal_execute("content_copy_import_form", $form_state);
+  content_clear_type_cache();
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function dynamic_schedule_enable() {
+  //drupal_execute('content_copy_import_form', $form_state);
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */     
+function dynamic_schedule_uninstall() {
+    module_load_include('inc', 'content', 'includes/content.crud');
+
+  drupal_uninstall_schema('dynamic_schedule');
+  variable_del('dynamic_schedule');
+  //delete the content type
+  node_type_delete('dynamic_schedule_available');
+  //delete all user created content
+  $query = db_query("SELECT n.nid FROM {node} n WHERE n.type = 'dynamic_schedule_available'"); 
+  while ($n = db_fetch_object($query)) 
+  {
+    node_delete($n->nid);
+  }
+}

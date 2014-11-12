@@ -1,0 +1,181 @@
+<?php
+/**
+ * Implements hook_help()
+ */
+function dynamic_schedule_help($path, $arg) {
+	$output = '';
+	switch ($path) {
+		case 'admin/help#dynamic_schedule':
+		$output = '<p>'.t("Allows users to enter the times they are available and display them on a scheduler.").'</p>';
+		break;		
+	}
+	return $output;
+}
+
+/**
+ * Implements hook_perm()
+ */
+function dynamic_schedule_perm() {
+	return array(
+		'access dynamic_schedule', 
+		'create dynamic_schedule', 
+		'administer dynamic_schedule',
+		'administer dynamic_schedule_available',
+		'create dynamic_schedule_available',
+		'delete dynamic_schedule_available',
+		'delete own dynamic_schedule_available',
+		'edit dynamic_schedule_available',
+		'edit own dynamic_schedule_available'
+		);
+} 
+
+/**
+ * Implementation of hook_access().
+ */
+function dynamic_schedule_access($op, $node, $account) {
+	switch ($op) {
+		case 'create':
+		return user_access('create dynamic_schedule_available', $account);
+		break;
+		case 'update':
+		return user_access('edit dynamic_schedule_available', $account) || (user_access('edit own dynamic_schedule_available', $account) && ($account->uid == $node->uid));
+		break;
+		case 'delete':
+		return user_access('delete dynamic_schedule_available', $account) || (user_access('delete own dynamic_schedule_available', $account) && ($account->uid == $node->uid));
+		break;
+	}
+}
+
+/**
+ * Implements hook_block().
+ * This is where the functionality, looks, and everything else is defined
+ * THE MOTHER OF ALL MODULE FUNCTIONS IS HERE
+ */
+function dynamic_schedule_block($op = 'list', $delta = 0, $edit = array()) {
+	$block = array();
+	switch ($op) {
+		case 'list':
+			//List of blocks for this module
+		$block[0]['info'] = t('Scheduler');
+		break;
+
+		case 'view':
+		drupal_add_css(drupal_get_path('module','dynamic_schedule').'/dynamic_schedule.css');
+		$block_content = '';
+		//save the page's nid for referenceing
+		$page_nid = menu_get_object()->nid;
+		$schedule_data = get_page_scheduler_data($page_nid);
+		//make sure it's the correct data and that the page even has scheduler data then build block
+		if($schedule_data->field_dyn_sch_page_value === $page_nid && $schedule_data->field_dyn_sch_page_value !== null) {
+			$block_content = build_scheduler($schedule_data);
+			$block['subject'] = t(node_load($schedule_data->nid)->field_header[0]['value']);
+			$block['content'] = '<div class="dynamic_schedule">'.$block_content.'</div>';
+		}
+		else {
+			$block = array();
+		}
+		break;
+
+		case 'save':
+		break;
+
+		case 'configure':
+		break;
+	}
+	return $block;
+}
+
+/**
+ * a db query that gets the scheduler data associated with the page
+ */
+function get_page_scheduler_data($page_nid = null) {
+	if ($page_nid == null) {
+		$page_nid = menu_get_object()->nid;
+	}
+	//a fix for the weird admin pages problem
+	if (!is_string($page_nid)) {
+		return;
+	}
+	//query for the page's schedule content type
+	$query = 'SELECT nid, field_dyn_sch_page_value FROM content_field_dyn_sch_page WHERE field_dyn_sch_page_value ='.$page_nid;
+	$query_result = db_query($query);
+	//create an array with the data from the query
+	$times = db_fetch_object($query_result);
+	return $times;
+}
+
+/**
+ * builds the view of the scheduler block
+ */
+function build_scheduler($times) {
+	$html_days = '';
+	$html_times = '';
+	//load up the data
+	$schedule_node = node_load($times->nid);
+	//make an array of the open and closing times for each day
+	$days = array(
+		0 => array($schedule_node->field_monday[0]['value'],$schedule_node->field_monday_close[0]['value'],'MON'),
+		1 => array($schedule_node->field_tuesday[0]['value'],$schedule_node->field_tuesday_close[0]['value'],'TUES'),
+		2 => array($schedule_node->field_wednesday[0]['value'],$schedule_node->field_wednesday_close[0]['value'],'WED'),
+		3 => array($schedule_node->field_thursday[0]['value'],$schedule_node->field_thursday_close[0]['value'],'THURS'),
+		4 => array($schedule_node->field_friday[0]['value'],$schedule_node->field_friday_close[0]['value'],'FRI'),
+		5 => array($schedule_node->field_saturday[0]['value'],$schedule_node->field_saturday_close[0]['value'],'SAT'),
+		6 => array($schedule_node->field_sunday[0]['value'],$schedule_node->field_sunday_close[0]['value'],'SUN'),
+		);
+	//Display each day
+	foreach ($days as $day) {
+		$html_days .= '<li class="dynamic_schedule_day">'.t(check_plain($day[2])).'</li>';
+	}
+	//Display times and remove repeats for that nice visual effect Max is going for
+	$curr_streak = 1;
+	for ($i=0; $i < count($days); $i++) {
+		if($days[$i][0] !== $days[$i+1][0] || $days[$i][1] !== $days[$i+1][1]) {
+			//add special class to sunday
+			if($i == count($days)-1) {
+				//case closed lolz
+				if($days[$i][0] == 'closed' || $days[$i][1] == 'closed') {
+					$html_times .= '<li class="dynamic_schedule_sunday dynamic_schedule_closed dynamic_schedule_time_'.$curr_streak.'"><br>closed<br><br></li>';
+				} 
+				else {
+					$html_times .= '<li class="dynamic_schedule_sunday dynamic_schedule_time_'.$curr_streak.'">'.check_plain($days[$i][0]).' <br>-<br> '.check_plain($days[$i][1]).'</li>';
+				}
+			} 
+			else {
+				//closed case
+				if($days[$i][0] == 'closed' || $days[$i][1] == 'closed') {
+					$html_times .= '<li class="dynamic_schedule_closed dynamic_schedule_time_'.$curr_streak.'"><br>closed<br><br></li>';
+					$curr_streak = 1;
+				}
+				else {
+					$html_times .= '<li class="dynamic_schedule_time_'.$curr_streak.'">'.check_plain($days[$i][0]).' <br>-<br> '.check_plain($days[$i][1]).'</li>';
+					$curr_streak = 1;
+				}
+			}
+		} else {
+			$curr_streak++;
+		}
+	}
+	//body content
+	// $block_content = '<div class="dynamic_schedule_box"><div><ul class=dynamic_schedule_days>'.$html_days.'</ul></div><div><ul class="dynamic_schedule_times">'.$html_times.'</ul></div></div>';
+	return theme('dynamic-schedule-block', $html_days, $html_times);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function dynamic_schedule_theme() {
+  return array(
+    'dynamic-schedule-block' => array(
+      'template' => 'dynamic-schedule-block',
+      'arguments' => array(
+           'days' => null,
+           'times' => null
+       ),
+    ),
+  );
+}
+
+
+
+
+

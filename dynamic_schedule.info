@@ -1,0 +1,7 @@
+; $Id$
+name = Dynamic Schedule
+description = This module adds a scheduler to the page that dynamically resizes based on the times you enter.
+core = 6.x
+php = 5.x
+dependencies[] = content
+dependencies[] = content_copy

@@ -1,0 +1,103 @@
+
+#body-content .content .block .dynamic_schedule ul {
+  margin: 0;
+}
+
+#body-content .content .dynamic_schedule ul li {
+font-family: "Lucida Sans Unicode","Lucida Grande",Garuda,sans-serif;
+margin: 0;
+}
+
+.dynamic_schedule_times li {
+  margin-left: 0;
+  margin: 0;
+}
+
+
+.dynamic_schedule {
+  border: 2px solid #484848;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: "Lucida Sans Unicode","Lucida Grande",Garuda,sans-serif;
+}
+
+ul.dynamic_schedule_days {
+  margin: 0px;
+  padding: 11px 0px 9px 0px;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #454545;
+  border-bottom: #464646 2px solid;
+}
+
+.dynamic_schedule_box div ul li {
+  list-style: none;
+  display: inline-block;
+  width: 14.25%;
+  vertical-align: middle;
+  text-align: center;
+}
+
+
+/* can you change the names of the days to be MON, TUES, WED, THURS, FRI, SAT, SUN
+  and can you also put a space between the time and the AM or PM designation
+
+*/
+
+.dynamic_schedule_times {
+  padding: 0 !important;
+  background-color: #e77569;
+  color: white;
+  font-weight: bold;
+  font-family: "Lucida Sans Unicode","Lucida Grande",Garuda,sans-serif;
+  text-transform: uppercase;
+}
+
+.dynamic_schedule_time_1,
+.dynamic_schedule_time_2,
+.dynamic_schedule_time_3,
+.dynamic_schedule_time_4,
+.dynamic_schedule_time_5,
+.dynamic_schedule_time_6,
+.dynamic_schedule_time_7 {
+  padding: 5% 0 5% 0;
+  margin-top: -41px;
+  border-right: #464646 2px solid;
+}
+
+
+.dynamic_schedule_time_1 {
+  width: 14% !important;
+}
+
+.dynamic_schedule_time_2 {
+  width: 28% !important;
+}
+
+.dynamic_schedule_time_3 {
+  width: 42% !important;
+}
+
+.dynamic_schedule_time_4 {
+  width: 57% !important;
+}
+
+.dynamic_schedule_time_5 {
+  width: 71% !important;
+}
+
+.dynamic_schedule_time_6 {
+  width: 85% !important;
+}
+
+.dynamic_schedule_time_7 {
+  width: 99% !important;
+}
+
+.dynamic_schedule_sunday {
+  border-right: none;
+}
+
+.dynamic_schedule_closed {
+}
